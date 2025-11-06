@@ -1,5 +1,5 @@
 # 06_render_report.R
-# Render the final report
+# Render the final report in both PDF and HTML formats
 
 library(rmarkdown)
 
@@ -13,17 +13,29 @@ if (length(rmd_files) == 0) {
 }
 
 rmd_file <- rmd_files[1]
-output_name <- gsub("\\.Rmd$", ".pdf", basename(rmd_file))
+base_name <- gsub("\\.Rmd$", "", basename(rmd_file))
 
 cat("Rendering:", rmd_file, "\n")
-cat("Output will be:", file.path("output", output_name), "\n")
 
-# Render the RMarkdown report to PDF
+# Render PDF version
+cat("\n=== Rendering PDF ===\n")
 rmarkdown::render(
   input = rmd_file,
   output_format = "pdf_document",
   output_dir = "output"
 )
+cat("PDF created: output/", base_name, ".pdf\n", sep = "")
 
-cat("\nReport rendered successfully!\n")
-cat("Output: output/", output_name, "\n", sep = "")
+# Render HTML version
+cat("\n=== Rendering HTML ===\n")
+rmarkdown::render(
+  input = rmd_file,
+  output_format = "html_document",
+  output_dir = "output"
+)
+cat("HTML created: output/", base_name, ".html\n", sep = "")
+
+cat("\n✓ Both reports rendered successfully!\n")
+cat("Outputs:\n")
+cat("  - output/", base_name, ".pdf\n", sep = "")
+cat("  - output/", base_name, ".html\n", sep = "")

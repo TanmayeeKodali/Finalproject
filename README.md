@@ -34,6 +34,7 @@ This project analyzes the temporal patterns of SARS-CoV-2 variant emergence and 
     ├── figures/
     │   └── variant_trends.png   # Main visualization
     └── report.pdf        # Final report (generated)
+    └── report.html        # Final report (generated)
 ```
 
 ## Data Source
