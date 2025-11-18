@@ -15,6 +15,9 @@ This project analyzes the temporal patterns of SARS-CoV-2 variant emergence and 
 .
 ├── README.md                    # This file
 ├── Makefile                     # Build automation
+├── renv.lock                    # Package dependency snapshot (renv)
+├── .Rprofile                    # renv activation script
+├── renv/                        # renv package library
 ├── data/
 │   └── SARS_Cov_dataset.xlsx    # Cleaned dataset (173,130 rows, 10 columns)
 ├── code/
@@ -55,15 +58,19 @@ This project analyzes the temporal patterns of SARS-CoV-2 variant emergence and 
 - Make (for using Makefile; typically pre-installed on Mac/Linux)
 
 ### Required R Packages
-The following packages will be automatically installed when running `make install`:
-- tidyverse
-- gtsummary
-- kableExtra
-- labelled
-- scales
-- plotly
-- here
-- readxl
+This project uses **renv** for package management. All required packages and their versions are specified in `renv.lock`.
+
+## Reproducibility: Package Management with renv
+
+### Synchronizing the package environment
+
+After cloning this repository, restore the package environment:
+
+```bash
+make install
+```
+
+This will install all required packages with the versions specified in `renv.lock`.
 
 ## Generating the Report
 
@@ -72,14 +79,12 @@ The following packages will be automatically installed when running `make instal
 This will run all analysis steps and generate the final report:
 
 ```bash
-# Install required packages (first time only)
+# First time: Install required packages
 make install
 
 # Build everything
 make all
 ```
-
-The final report will be saved as `output/report.pdf`
 
 ### Option 2: Step-by-Step Build
 
@@ -107,6 +112,13 @@ To remove all generated files and rebuild from scratch:
 ```bash
 make rebuild
 ```
+
+### Makefile Targets
+
+- `make install` - Install required R packages using renv
+- `make all` or `make report` - Build the complete analysis and report (default)
+- `make clean` - Remove all generated outputs
+- `make rebuild` - Clean and rebuild everything from scratch
 
 ## Key Outputs
 
@@ -164,8 +176,8 @@ make rebuild
 **Issue:** `make: command not found`
 - **Solution:** Install Make or run R scripts directly using `Rscript code/XX_*.R`
 
-**Issue:** Package installation fails
-- **Solution:** Run `install.packages(c("tidyverse", "gtsummary", "kableExtra", "labelled", "scales", "plotly"))` in R console
+**Issue:** Package installation fails during `renv::restore()`
+- **Solution:** Ensure you have a stable internet connection. Try running `make install` again.
 
 **Issue:** "cannot open file 'data/SARS_Cov_dataset.xlsx'"
 - **Solution:** Ensure the cleaned Excel file is in the `data/` directory with the exact filename `SARS_Cov_dataset.xlsx`
@@ -177,7 +189,7 @@ make rebuild
 
 **Author:** Tanmayee Kodali  
 **Course:** DATA 550 - Data Science Toolkit  
-**Institution:**  Emory University
+**Institution:** Emory University
 
 For questions or issues, please open an issue on this GitHub repository.
 

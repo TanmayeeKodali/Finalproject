@@ -1,11 +1,11 @@
-.PHONY: all clean install report
+.PHONY: all clean install report rebuild
 
 # Default target: build everything
 all: report
 
-# Install required R packages
+# Install dependencies using renv
 install:
-	Rscript code/01_load_libraries.R
+	Rscript -e "renv::restore()"
 
 # Process cleaned data (filter, transform, create variant families)
 output/processed_data.rds: code/02_process_data.R data/SARS_Cov_dataset.xlsx
