@@ -9,11 +9,94 @@ This project analyzes the temporal patterns of SARS-CoV-2 variant emergence and 
 - Variants showed rapid emergence (1-6% per week) and sequential replacement
 - Minimal overlap between dominant strains, indicating strong selective advantages
 
+---
+
+## Docker Container
+
+This project includes a Docker container for fully reproducible analysis. The container includes all required dependencies and generates the complete report.
+
+### Docker Image on DockerHub
+
+The Docker image is publicly available on DockerHub:
+
+**Image:** `tanmayeekodali/covid-analysis:latest`
+
+**DockerHub Link:** https://hub.docker.com/r/tanmayeekodali/covid-analysis
+
+### Building the Docker Image
+
+If you want to build the image locally (optional, since it's available on DockerHub):
+
+```bash
+# From the project root directory
+docker build -t tanmayeekodali/covid-analysis:latest .
+```
+
+This will:
+- Install R and all required packages
+- Copy all project files (data, code, report)
+- Set up the complete analysis pipeline
+
+### Running the Docker Container
+
+#### Using Make (Recommended - Cross-Platform)
+
+The easiest way to generate the report using Docker:
+
+```bash
+make docker-run
+```
+
+This command will:
+1. Pull the Docker image from DockerHub (if not already local)
+2. Create an empty `report/` directory in your project
+3. Run the container and mount the `report/` directory
+4. Execute the complete analysis pipeline
+5. Save the generated report files to `report/`
+
+**Output files** (in the `report/` directory):
+- `Finalproject.pdf` - PDF version of the report
+- `Finalproject.html` - HTML version of the report
+- `processed_data.rds` - Processed dataset
+- `tables/` - Summary statistics and emergence/decline tables
+- `figures/` - Variant trends visualization
+
+#### Manual Docker Run
+
+If you prefer to run Docker directly:
+
+**On Mac/Linux:**
+```bash
+# Create empty report directory
+mkdir -p report
+
+# Run the container
+docker run --rm \
+  -v "$(pwd)/report:/project/output" \
+  tanmayeekodali/covid-analysis:latest
+```
+
+**On Windows (Git Bash):**
+```bash
+# Create empty report directory
+mkdir -p report
+
+# Run the container
+docker run --rm \
+  -v "/$(pwd)/report:/project/output" \
+  tanmayeekodali/covid-analysis:latest
+```
+
+**Note for Windows users:** The extra `/` before `$(pwd)` is required for Git Bash to correctly interpret the path for volume mounting.
+
+---
+
 ## Repository Structure
 
 ```
 .
 ├── README.md                    # This file
+├── Dockerfile                   # Docker configuration
 ├── Makefile                     # Build automation
 ├── renv.lock                    # Package dependency snapshot (renv)
 ├── .Rprofile                    # renv activation script
@@ -29,16 +112,20 @@ This project analyzes the temporal patterns of SARS-CoV-2 variant emergence and 
 │   └── 06_render_report.R       # Render final PDF report
 ├── report/
 │   └── Finalproject.Rmd        # Main analysis report
-└── output/
-    ├── processed_data.rds       # Processed dataset (4,254 rows)
-    ├── tables/
-    │   ├── summary_stats.rds    # Summary statistics table
-    │   └── emergence_decline.rds # Emergence/decline table
-    ├── figures/
-    │   └── variant_trends.png   # Main visualization
-    └── report.pdf        # Final report (generated)
-    └── report.html        # Final report (generated)
+├── output/                      # Generated files (local builds)
+│   ├── processed_data.rds       # Processed dataset (4,254 rows)
+│   ├── tables/
+│   │   ├── summary_stats.rds    # Summary statistics table
+│   │   └── emergence_decline.rds # Emergence/decline table
+│   ├── figures/
+│   │   └── variant_trends.png   # Main visualization
+│   ├── Finalproject.pdf         # Final report (generated)
+│   └── Finalproject.html        # Final report (generated)
+└── report/                      # Docker-generated output directory
+    └── (same structure as output/)
 ```
+
+---
 
 ## Data Source
 
@@ -50,15 +137,29 @@ This project analyzes the temporal patterns of SARS-CoV-2 variant emergence and 
 
 **Note:** The dataset in `data/` is a reduced Excel file (SARS_Cov_dataset.xlsx) containing a subset of the original CDC data but with all variants and time periods needed for the analysis. The `02_process_data.R` script filters this down to the 8 specific variants of interest for the Dec 2022 - Oct 2024 period, reducing from 173,130 rows to approximately 4,254 rows.
 
+---
+
 ## Prerequisites
 
-### System Requirements
+### For Local Builds
+
+#### System Requirements
 - R (version ≥ 4.0)
 - RStudio (optional, for interactive use)
 - Make (for using Makefile; typically pre-installed on Mac/Linux)
 
-### Required R Packages
+#### Required R Packages
 This project uses **renv** for package management. All required packages and their versions are specified in `renv.lock`.
+
+### For Docker Builds
+
+#### System Requirements
+- Docker Desktop (Mac/Windows) or Docker Engine (Linux)
+  - Download: https://www.docker.com/get-started
+
+That's it! All R dependencies are included in the Docker image.
+
+---
 
 ## Reproducibility: Package Management with renv
 
@@ -72,9 +173,24 @@ make install
 
 This will install all required packages with the versions specified in `renv.lock`.
 
+---
+
 ## Generating the Report
 
-### Option 1: Full Build (Recommended)
+### Method 1: Using Docker (Fully Reproducible)
+
+**Recommended for maximum reproducibility.** This method ensures identical results across all systems.
+
+```bash
+# Generate report using the pre-built Docker image
+make docker-run
+```
+
+The report will be created in the `report/` directory.
+
+### Method 2: Local Build
+
+#### Full Build (Recommended)
 
 This will run all analysis steps and generate the final report:
 
@@ -86,7 +202,7 @@ make install
 make all
 ```
 
-### Option 2: Step-by-Step Build
+#### Step-by-Step Build
 
 You can also run individual steps:
 
@@ -105,7 +221,7 @@ Rscript code/05_make_figure.R
 Rscript code/06_render_report.R
 ```
 
-### Option 3: Clean and Rebuild
+#### Clean and Rebuild
 
 To remove all generated files and rebuild from scratch:
 
@@ -113,18 +229,26 @@ To remove all generated files and rebuild from scratch:
 make rebuild
 ```
 
-### Makefile Targets
+---
 
+## Makefile Targets
+
+### Local Build Targets
 - `make install` - Install required R packages using renv
 - `make all` or `make report` - Build the complete analysis and report (default)
 - `make clean` - Remove all generated outputs
 - `make rebuild` - Clean and rebuild everything from scratch
 
+### Docker Targets
+- `make docker-run` - Run the Docker container to generate the report in `report/` directory
+
+---
+
 ## Key Outputs
 
 ### Required Table: Summary Statistics
 - **Location:** `code/03_make_summary_table.R`
-- **Output:** `output/tables/summary_stats.rds`
+- **Output:** `output/tables/summary_stats.rds` (or `report/tables/summary_stats.rds` from Docker)
 - **Description:** Summary statistics table showing:
   - Time period of circulation
   - Mean and peak prevalence percentages
@@ -133,7 +257,7 @@ make rebuild
 
 ### Required Figure: Variant Trends
 - **Location:** `code/05_make_figure.R`
-- **Output:** `output/figures/variant_trends.png`
+- **Output:** `output/figures/variant_trends.png` (or `report/figures/variant_trends.png` from Docker)
 - **Description:** Time series visualization showing:
   - Variant prevalence over time (Dec 2022 - Oct 2024)
   - Confidence intervals (shaded regions)
@@ -142,8 +266,10 @@ make rebuild
 
 ### Additional Output: Emergence/Decline Dynamics
 - **Location:** `code/04_make_emergence_table.R`
-- **Output:** `output/tables/emergence_decline.rds`
+- **Output:** `output/tables/emergence_decline.rds` (or `report/tables/emergence_decline.rds` from Docker)
 - **Description:** Metrics for variant emergence and decline rates
+
+---
 
 ## Analysis Details
 
@@ -169,12 +295,14 @@ make rebuild
 - Maximum 4 concurrent variants >5% at any given time
 - Only 38 weeks showed multiple variants >5%
 
+---
+
 ## Troubleshooting
 
 ### Common Issues
 
 **Issue:** `make: command not found`
-- **Solution:** Install Make or run R scripts directly using `Rscript code/XX_*.R`
+- **Solution:** Install Make or run R scripts directly using `Rscript code/XX_*.R`, or use Docker method
 
 **Issue:** Package installation fails during `renv::restore()`
 - **Solution:** Ensure you have a stable internet connection. Try running `make install` again.
@@ -183,7 +311,15 @@ make rebuild
 - **Solution:** Ensure the cleaned Excel file is in the `data/` directory with the exact filename `SARS_Cov_dataset.xlsx`
 
 **Issue:** PDF rendering fails
-- **Solution:** Install a LaTeX distribution (TinyTeX recommended: `tinytex::install_tinytex()`)
+- **Solution:** Install a LaTeX distribution (TinyTeX recommended: `tinytex::install_tinytex()`) or use the Docker method
+
+**Issue:** Docker volume mounting fails on Windows
+- **Solution:** Ensure you're using Git Bash and the path includes the extra `/` prefix, or use `make docker-run` which handles this automatically
+
+**Issue:** Docker image pull fails
+- **Solution:** Check your internet connection and verify the image exists at https://hub.docker.com/r/tanmayeekodali/covid-analysis
+
+---
 
 ## Contact
 
@@ -192,6 +328,8 @@ make rebuild
 **Institution:** Emory University
 
 For questions or issues, please open an issue on this GitHub repository.
+
+---
 
 ## License
 

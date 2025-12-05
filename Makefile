@@ -1,4 +1,4 @@
-.PHONY: all clean install report rebuild
+.PHONY: all clean install report rebuild docker-run
 
 # Default target: build everything
 all: report
@@ -36,3 +36,30 @@ clean:
 
 # Clean and rebuild everything
 rebuild: clean all
+
+
+# Docker targets
+
+# Docker image name
+DOCKER_IMAGE := tanmayeekodali/covid-analysis:latest
+
+# Detect OS for proper path mounting
+ifeq ($(OS),Windows_NT)
+    # Windows Git Bash needs extra / for volume mounting
+    PWD_CMD := $(shell pwd | sed 's/^\/\([a-z]\)\//\1:\//')
+    MOUNT_PATH := /$(PWD_CMD)/report
+else
+    # Mac/Linux
+    PWD_CMD := $(shell pwd)
+    MOUNT_PATH := $(PWD_CMD)/report
+endif
+
+# Run Docker container to generate report
+docker-run:
+	mkdir -p report
+	docker run --rm \
+		-v "$(MOUNT_PATH):/project/output" \
+		$(DOCKER_IMAGE)
+	@echo ""
+	@echo "✓ Report generated successfully!"
+	@echo "Check the 'report/' directory for output files"
